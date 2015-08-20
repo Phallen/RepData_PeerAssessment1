@@ -1,7 +1,5 @@
 file name: PA1_template.Rmd
-```{r echo=FALSE} 
-    knitr::opts_chunk$set(echo=TRUE, warning=FALSE)
-```
+
 
 # Peer Assignment 1
 
@@ -11,10 +9,9 @@ This assignment will examine how the number of steps taken varies with time of d
 
 **First load libraries and data**
 
-```{r load file}
 
+```r
     library(lubridate)
-
 
     file.name <- "activity.zip"
 
@@ -24,17 +21,16 @@ This assignment will examine how the number of steps taken varies with time of d
     unzip(file.name)
 
     activity <- read.csv("activity.csv")
-
 ```
 
-    File `r print(file.name)` downloaded on `r date()`
+    File  downloaded on Thu Aug 20 15:03:06 2015
 
-    File contains: `r names(activity)`
+    File contains: steps, date, interval
 
 **Now calculate mean and median steps per day**
 
-```{r mean calc}
 
+```r
     first.day     <- ymd(as.character(activity$date[1]))  # first day of test
     date_sv       <- ymd(as.character(activity$date))     # full date of each measurement
     # Calculate a relative day, e.g., 0,1,2....
@@ -52,25 +48,27 @@ This assignment will examine how the number of steps taken varies with time of d
     median.stepsperday  <- median(total.stepsperday)
 ```
 
-    Reformatted file contains: `r names(activity)`  
+    Reformatted file contains: steps, day, interval  
 
-  **Mean steps per day is: `r format(mean.stepsperday, scientific=FALSE)`**    
-**Median steps per day is: `r median.stepsperday`**    
+  **Mean steps per day is: 10766.19**    
+**Median steps per day is: 10765**    
 
-    Reformatted file contains: `r names(activity)`
+    Reformatted file contains: steps, day, interval
 
-```{r Hist}
+
+```r
     # Form histogram
     hist(total.stepsperday,breaks=11,xlim=c(0,25000),
          main="Histogram of Total Steps per Day",
          xlab="Total Steps per Day")
-
 ```
 
+![plot of chunk Hist](figure/Hist-1.png) 
 
 
-```{r steps per int}
 
+
+```r
     # Calculate mean steps per interval
     mean.stepsperinterval <- tapply(activity$steps[loc],as.factor(activity$interval[loc]),mean)
     plot(mean.stepsperinterval, type="l", 
@@ -79,20 +77,22 @@ This assignment will examine how the number of steps taken varies with time of d
     title(main="Average Daily Activity Pattern")
 ```
 
-```{r max}
+![plot of chunk steps per int](figure/steps per int-1.png) 
 
+
+```r
     # Find max
     max.stepsperinterval <- max(mean.stepsperinterval)
     mloc <- which.max(mean.stepsperinterval)
 ```
 
-**Max Steps per interval is `r max.stepsperinterval`**    
-**Max occurs at interval number `r mloc` or minute `r activity$interval[mloc]` of the day**  
+**Max Steps per interval is 206.1698113**    
+**Max occurs at interval number 104 or minute 835 of the day**  
 
 **Now correct for missing data:**
 
-```{r miss}
 
+```r
         nmiss <- sum(is.na(activity$step))  # number of intervals with missing data
 
         activity_nm <- activity             # initialize new table
@@ -116,26 +116,28 @@ This assignment will examine how the number of steps taken varies with time of d
          total.stepsperday2  <- tapply(activity_nm$steps,activity_nm$day,sum)
           mean.stepsperday2  <- mean(total.stepsperday2)
         median.stepsperday2  <- median(total.stepsperday2)
-
 ```
 
-A total of `r nmiss` intervals are missing data  
-**Max difference in steps per day due to replacing NAs with mean of 5 min values is `r max_diff`**    
+A total of 2304 intervals are missing data  
+**Max difference in steps per day due to replacing NAs with mean of 5 min values is 0**    
 
-```{r hist2}
+
+```r
         # Form histogram
         hist(total.stepsperday2,breaks=11,xlim=c(0,25000),
              main = paste("Histogram of Total Steps per Day, after NA removal"),
              xlab="Total Steps per Day")
 ```
+
+![plot of chunk hist2](figure/hist2-1.png) 
 **Corrected statistics:**  
-Mean Steps per Day `r format(mean.stepsperday2, scientific=FALSE)`  
-Median Steps per Day `r format(median.stepsperday2, scientific=FALSE)`  
+Mean Steps per Day 10766.19  
+Median Steps per Day 10766.19  
 
 **The mean is unchanged, but now the median equals the mean**
 
-```{r final figs, fig.height=8}
 
+```r
 wkday <- weekdays(date_sv)
 
 loc_wend <- (wkday=="Saturday") | (wkday=="Sunday")
@@ -153,5 +155,6 @@ par(mfrow=c(2,1))
 
 plot(mean.weekend,type="l",main="Average Weekend Steps/Interval",xlab="Interval",ylab="Average Steps per Interval")
 plot(mean.weekday,type="l",main="Average Weekday Steps/Interval",xlab="Interval",ylab="Average Steps per Interval")
-
 ```
+
+![plot of chunk final figs](figure/final figs-1.png) 
