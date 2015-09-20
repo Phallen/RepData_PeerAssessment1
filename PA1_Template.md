@@ -3,9 +3,15 @@ file name: PA1_template.Rmd
 
 # Peer Assignment 1
 
-This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day .
+This assignment makes use of data from a personal activity monitoring device. 
+This device collects data at 5 minute intervals through out the day. The data 
+consists of two months of data from an anonymous individual collected during the 
+months of October and November, 2012 and include the number of steps taken in 
+5 minute intervals each day.
 
-This assignment will examine how the number of steps taken varies with time of day and day of week
+This assignment will examine how the number of steps taken varies with time of 
+day and day of week
+
 
 **First load libraries and data**
 
@@ -23,9 +29,9 @@ This assignment will examine how the number of steps taken varies with time of d
     activity <- read.csv("activity.csv")
 ```
 
-    File  downloaded on Thu Aug 20 15:03:06 2015
+    File  downloaded on Sun Sep 20 07:41:26 2015
 
-    File contains: steps, date, interval
+    File contains variables: steps, date, interval
 
 **Now calculate mean and median steps per day**
 
@@ -35,12 +41,13 @@ This assignment will examine how the number of steps taken varies with time of d
     date_sv       <- ymd(as.character(activity$date))     # full date of each measurement
     # Calculate a relative day, e.g., 0,1,2....
     activity$date <- 
-        round(as.numeric(as.duration(interval(first.day, ymd(as.character(activity$date)))))/86400)
+        round(as.numeric(as.duration(
+            interval(first.day, ymd(as.character(activity$date)))))/86400)
 
     # Rename table variable
     names(activity)[2] <- "day"
 
-    loc     <- !is.na(activity$steps)  # locations of valid data
+    loc <- !is.na(activity$steps)  # locations of valid data
 
     # Calculate total, mean, and median steps per day
      total.stepsperday  <- tapply(activity$steps[loc],activity$day[loc],sum)
@@ -48,12 +55,10 @@ This assignment will examine how the number of steps taken varies with time of d
     median.stepsperday  <- median(total.stepsperday)
 ```
 
-    Reformatted file contains: steps, day, interval  
+    Reformatted file contains variables: steps, day, interval  
 
   **Mean steps per day is: 10766.19**    
 **Median steps per day is: 10765**    
-
-    Reformatted file contains: steps, day, interval
 
 
 ```r
@@ -73,7 +78,7 @@ This assignment will examine how the number of steps taken varies with time of d
     mean.stepsperinterval <- tapply(activity$steps[loc],as.factor(activity$interval[loc]),mean)
     plot(mean.stepsperinterval, type="l", 
          ylab="Steps per Interval", 
-         xlab="Interval, in minutes within a day")
+         xlab="5 Minute Interval Number, within a day")
     title(main="Average Daily Activity Pattern")
 ```
 
@@ -86,7 +91,7 @@ This assignment will examine how the number of steps taken varies with time of d
     mloc <- which.max(mean.stepsperinterval)
 ```
 
-**Max Steps per interval is 206.1698113**    
+**Max Steps per interval is 206.2**    
 **Max occurs at interval number 104 or minute 835 of the day**  
 
 **Now correct for missing data:**
@@ -96,12 +101,16 @@ This assignment will examine how the number of steps taken varies with time of d
         nmiss <- sum(is.na(activity$step))  # number of intervals with missing data
 
         activity_nm <- activity             # initialize new table
-        loc_miss <- is.na(activity$steps)   # locations of missing data
+
         # Replace missing data with mean for that interval
-        ptr <- rep(1:288,61)                # there are 288 intervals in each day, 61 days
 
         # Load means into places where data is missing
-        activity_nm$steps[loc_miss] <- mean.stepsperinterval[ptr]
+        for (i in 1:17568){
+            if (is.na(activity_nm$steps[i])) {
+                j <- i%%288 + 1
+                activity_nm$steps[i] <- mean.stepsperinterval[j]
+            }
+        }
 
         # Calculate new mean after data correction
         mean.stepsperinterval2 <- tapply(activity_nm$steps, as.factor(activity_nm$interval),mean)
@@ -119,7 +128,8 @@ This assignment will examine how the number of steps taken varies with time of d
 ```
 
 A total of 2304 intervals are missing data  
-**Max difference in steps per day due to replacing NAs with mean of 5 min values is 0**    
+
+**Max difference in steps per day due to replacing NAs with mean of 5 min values is 8.03**    
 
 
 ```r
@@ -130,6 +140,7 @@ A total of 2304 intervals are missing data
 ```
 
 ![plot of chunk hist2](figure/hist2-1.png) 
+
 **Corrected statistics:**  
 Mean Steps per Day 10766.19  
 Median Steps per Day 10766.19  
@@ -143,10 +154,9 @@ wkday <- weekdays(date_sv)
 loc_wend <- (wkday=="Saturday") | (wkday=="Sunday")
 
 daytype <- rep("weekday",17568)
-daytype[loc_wend] <- rep("weekend",length(loc_wend))
+daytype[loc_wend] <- rep("weekend",sum(loc_wend))
                         
 activity_nm$daytype <- as.factor(daytype)
-
 
 mean.weekday  <- tapply(activity_nm$steps[!loc_wend],as.factor(activity_nm$interval[!loc_wend]),mean)
 mean.weekend  <- tapply(activity_nm$steps[ loc_wend],as.factor(activity_nm$interval[ loc_wend]),mean)

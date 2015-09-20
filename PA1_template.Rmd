@@ -1,20 +1,26 @@
 file name: PA1_template.Rmd
-```{r echo=FALSE} 
-    knitr::opts_chunk$set(echo=TRUE, warning=FALSE)
+```{r echo=FALSE, setup} 
+    rm(list=ls()) # Clear out workspace
+    knitr::opts_chunk$set(echo=TRUE, warning=TRUE)
 ```
 
 # Peer Assignment 1
 
-This assignment makes use of data from a personal activity monitoring device. This device collects data at 5 minute intervals through out the day. The data consists of two months of data from an anonymous individual collected during the months of October and November, 2012 and include the number of steps taken in 5 minute intervals each day .
+This assignment makes use of data from a personal activity monitoring device. 
+This device collects data at 5 minute intervals through out the day. The data 
+consists of two months of data from an anonymous individual collected during the 
+months of October and November, 2012 and include the number of steps taken in 
+5 minute intervals each day.
 
-This assignment will examine how the number of steps taken varies with time of day and day of week
+This assignment will examine how the number of steps taken varies with time of 
+day and day of week
+
 
 **First load libraries and data**
 
 ```{r load file}
 
     library(lubridate)
-
 
     file.name <- "activity.zip"
 
@@ -29,7 +35,7 @@ This assignment will examine how the number of steps taken varies with time of d
 
     File `r print(file.name)` downloaded on `r date()`
 
-    File contains: `r names(activity)`
+    File contains variables: `r names(activity)`
 
 **Now calculate mean and median steps per day**
 
@@ -39,12 +45,13 @@ This assignment will examine how the number of steps taken varies with time of d
     date_sv       <- ymd(as.character(activity$date))     # full date of each measurement
     # Calculate a relative day, e.g., 0,1,2....
     activity$date <- 
-        round(as.numeric(as.duration(interval(first.day, ymd(as.character(activity$date)))))/86400)
+        round(as.numeric(as.duration(
+            interval(first.day, ymd(as.character(activity$date)))))/86400)
 
     # Rename table variable
     names(activity)[2] <- "day"
 
-    loc     <- !is.na(activity$steps)  # locations of valid data
+    loc <- !is.na(activity$steps)  # locations of valid data
 
     # Calculate total, mean, and median steps per day
      total.stepsperday  <- tapply(activity$steps[loc],activity$day[loc],sum)
@@ -52,12 +59,10 @@ This assignment will examine how the number of steps taken varies with time of d
     median.stepsperday  <- median(total.stepsperday)
 ```
 
-    Reformatted file contains: `r names(activity)`  
+    Reformatted file contains variables: `r names(activity)`  
 
   **Mean steps per day is: `r format(mean.stepsperday, scientific=FALSE)`**    
 **Median steps per day is: `r median.stepsperday`**    
-
-    Reformatted file contains: `r names(activity)`
 
 ```{r Hist}
     # Form histogram
@@ -75,7 +80,7 @@ This assignment will examine how the number of steps taken varies with time of d
     mean.stepsperinterval <- tapply(activity$steps[loc],as.factor(activity$interval[loc]),mean)
     plot(mean.stepsperinterval, type="l", 
          ylab="Steps per Interval", 
-         xlab="Interval, in minutes within a day")
+         xlab="5 Minute Interval Number, within a day")
     title(main="Average Daily Activity Pattern")
 ```
 
@@ -86,7 +91,7 @@ This assignment will examine how the number of steps taken varies with time of d
     mloc <- which.max(mean.stepsperinterval)
 ```
 
-**Max Steps per interval is `r max.stepsperinterval`**    
+**Max Steps per interval is `r format(max.stepsperinterval, digits=4)`**    
 **Max occurs at interval number `r mloc` or minute `r activity$interval[mloc]` of the day**  
 
 **Now correct for missing data:**
@@ -96,12 +101,16 @@ This assignment will examine how the number of steps taken varies with time of d
         nmiss <- sum(is.na(activity$step))  # number of intervals with missing data
 
         activity_nm <- activity             # initialize new table
-        loc_miss <- is.na(activity$steps)   # locations of missing data
+
         # Replace missing data with mean for that interval
-        ptr <- rep(1:288,61)                # there are 288 intervals in each day, 61 days
 
         # Load means into places where data is missing
-        activity_nm$steps[loc_miss] <- mean.stepsperinterval[ptr]
+        for (i in 1:17568){
+            if (is.na(activity_nm$steps[i])) {
+                j <- i%%288 + 1
+                activity_nm$steps[i] <- mean.stepsperinterval[j]
+            }
+        }
 
         # Calculate new mean after data correction
         mean.stepsperinterval2 <- tapply(activity_nm$steps, as.factor(activity_nm$interval),mean)
@@ -120,7 +129,8 @@ This assignment will examine how the number of steps taken varies with time of d
 ```
 
 A total of `r nmiss` intervals are missing data  
-**Max difference in steps per day due to replacing NAs with mean of 5 min values is `r max_diff`**    
+
+**Max difference in steps per day due to replacing NAs with mean of 5 min values is `r format(max_diff, digits=3)`**    
 
 ```{r hist2}
         # Form histogram
@@ -128,6 +138,7 @@ A total of `r nmiss` intervals are missing data
              main = paste("Histogram of Total Steps per Day, after NA removal"),
              xlab="Total Steps per Day")
 ```
+
 **Corrected statistics:**  
 Mean Steps per Day `r format(mean.stepsperday2, scientific=FALSE)`  
 Median Steps per Day `r format(median.stepsperday2, scientific=FALSE)`  
@@ -141,10 +152,9 @@ wkday <- weekdays(date_sv)
 loc_wend <- (wkday=="Saturday") | (wkday=="Sunday")
 
 daytype <- rep("weekday",17568)
-daytype[loc_wend] <- rep("weekend",length(loc_wend))
+daytype[loc_wend] <- rep("weekend",sum(loc_wend))
                         
 activity_nm$daytype <- as.factor(daytype)
-
 
 mean.weekday  <- tapply(activity_nm$steps[!loc_wend],as.factor(activity_nm$interval[!loc_wend]),mean)
 mean.weekend  <- tapply(activity_nm$steps[ loc_wend],as.factor(activity_nm$interval[ loc_wend]),mean)
